@@ -1538,6 +1538,10 @@ hyperapp@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/hyperapp/-/hyperapp-1.2.0.tgz#021dc2fdb2d5c068e495de3365b639f189df82ae"
 
+hyperapp@1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/hyperapp/-/hyperapp-1.2.1.tgz#a21a20395ed74427dadca05dcfa0baccd38c4fa7"
+
 "hyperconnect@file:../hyperconnect":
   version "0.0.1"
   dependencies:
