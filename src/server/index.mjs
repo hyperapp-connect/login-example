@@ -1,7 +1,6 @@
 import init from 'hyperconnect/server'
 
 // define the server side action handlers.
-// nesting coming soon
 const actions = {
   v0: {
     counter: {
@@ -11,14 +10,17 @@ const actions = {
         res.send(['counter.down', { value }])
       },
       down10: (req, res) => {
+        console.log('v0.counter.down10')
         const value = Math.max(0, parseInt(req.body.value, 10) - 10)
         res.send(['counter.down10', { value }])
       },
       up: (req, res) => {
+        console.log('v0.counter.up')
         const value = parseInt(req.body.value, 10) + 1
         res.send(['counter.up', { value }])
       },
       up10: (req, res) => {
+        console.log('v0.counter.up10')
         const value = parseInt(req.body.value, 10) + 10
         res.send(['counter.up10', { value }])
       },
@@ -27,7 +29,7 @@ const actions = {
 }
 
 // gather settings for the servers.
-// these are the default settings.
+// these are the default settings and could be omitted.
 const props = {
   actions,
   sockets: {
