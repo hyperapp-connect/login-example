@@ -7,6 +7,7 @@
     "start": "NODE_ENV=production rollup -c",
     "dev": "NODE_ENV=development rollup -c -w",
     "clean": "rm -rf public/js/*",
+    "format": "prettier --semi false --single-quote --trailing-comma es5 --write ./src/**/*.mjs",
     "server": "nodemon -w src/server -w node_modules/hyperconnect/src/server -- --experimental-modules src/server/index.mjs"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
@@ -14,6 +15,7 @@
   "devDependencies": {
     "babel-core": "6.26.0",
     "nodemon": "1.17.2",
+    "prettier": "1.11.1",
     "rollup": "0.57.1",
     "rollup-plugin-babel": "3.0.3",
     "rollup-plugin-jsx": "1.0.3",
@@ -22,6 +24,6 @@
   },
   "dependencies": {
     "hyperapp": "1.2.1",
-    "hyperconnect": "file:../hyperconnect"
+    "hyperconnect": "git+http://git@localhost:7005/hyperconnect"
   }
 }
