@@ -35,7 +35,7 @@ const props = {
   sockets: {
     host: 'localhost',
     port: 3001,
-    protocol: 'ws'
+    protocol: 'ws',
   },
   http: {
     host: 'localhost',
