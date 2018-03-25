@@ -45,7 +45,7 @@ export const view = (state, actions) => (
     <button onclick={() => actions.counter.down()}>-</button>
     <button onclick={() => actions.counter.down10()}>-10</button>
 
-    <input type="text" onkeydown={e => actions.local(e.target.value)} />
+    <input type="text" onkeyup={e => actions.local(e.target.value)} />
     <span>text, no server roundtrip: {state.input}</span>
   </div>
 )
