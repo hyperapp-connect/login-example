@@ -7,13 +7,15 @@
     "start": "NODE_ENV=production rollup -c",
     "dev": "NODE_ENV=development rollup -c -w",
     "clean": "rm -rf public/js/*",
-    "format": "prettier --semi false --single-quote --trailing-comma es5 --write ./src/**/*.mjs",
-    "server": "nodemon -w src/server -w node_modules/hyperconnect/src/server -- --experimental-modules src/server/index.mjs"
+    "build": "NODE_ENV=development rollup -c",
+    "format": "prettier --semi false --single-quote --trailing-comma es5 --write ./src/**/*.js",
+    "server": "npm run build && nodemon -w src/server -- dist/server.js"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "license": "MIT",
   "devDependencies": {
     "babel-core": "6.26.0",
+    "babel-preset-env": "1.6.1",
     "nodemon": "1.17.2",
     "prettier": "1.11.1",
     "rollup": "0.57.1",
@@ -23,7 +25,18 @@
     "rollup-plugin-uglify": "3.0.0"
   },
   "dependencies": {
-    "hyperapp": "1.2.1",
-    "hyperconnect": "git+http://git@localhost:7005/hyperconnect"
+    "hyperapp": "1.2.5",
+    "@hyperconnect/client": "github:hyperapp-connect/client",
+    "@hyperconnect/server": "github:hyperapp-connect/server"
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "modules": false
+        }
+      ]
+    ]
   }
 }
