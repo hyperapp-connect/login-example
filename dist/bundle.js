@@ -443,7 +443,7 @@ var app = (function (exports) {
 
       while (cache.length) {
         const msg = cache.shift();
-        send(msg);
+        ws.send(stringify(msg));
       }
     },
     close: () => {
