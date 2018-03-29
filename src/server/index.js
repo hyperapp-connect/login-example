@@ -1,4 +1,6 @@
-import init from 'hyperconnect/server'
+import init from '@hyperconnect/server'
+
+import * as client from '../client/client'
 
 // define the server side action handlers.
 const actions = {
@@ -43,6 +45,7 @@ const props = {
     protocol: 'http',
     bundleUrl: '/js/bundle.js',
   },
+  client,
 }
 
 // start websockets and http server

@@ -1,5 +1,5 @@
-import { h, app } from 'hyperapp'
-import { log, connect, mapActions } from 'hyperconnect/client'
+import { h } from 'hyperapp'
+import { mapActions } from '@hyperconnect/client'
 
 // just a usual hyperapp state
 export const state = {
@@ -49,15 +49,3 @@ export const view = (state, actions) => (
     <span>text, no server roundtrip: {state.input}</span>
   </div>
 )
-
-export const connected = log(app)(state, actions, view, document.body)
-
-// socket server connection options
-const options = {
-  host: 'localhost',
-  protocol: 'ws',
-  port: 3001,
-}
-
-// wires the app and mounts it.
-export const ws = connect(connected, options)
