@@ -37,7 +37,7 @@ module.exports = [
       // use "main" field or index.js, even if it's not an ES6 module
       // (needs to be converted = require(CommonJS to ES6
       // – see https://github.com/rollup/rollup-plugin-commonjs
-      main: true,  // Default: true
+      main: false,  // Default: true
 
       // some package.json files have a `browser` field which
       // specifies alternative files to load for people bundling
