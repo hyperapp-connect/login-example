@@ -1,30 +1,12 @@
 import init from '@hyperconnect/server'
+import { random } from '@magic/cryptography'
 
 import * as client from '../client/client'
 
-// define the server side action handlers.
-const actions = {
-  v0: {
-    counter: {
-      down: (req, res) => {
-        const value = Math.max(0, parseInt(req.body.value, 10) - 1)
-        res.send({ value })
-      },
-      down10: (req, res) => {
-        const value = Math.max(0, parseInt(req.body.value, 10) - 10)
-        res.send({ value })
-      },
-      up: (req, res) => {
-        const value = parseInt(req.body.value, 10) + 1
-        res.send({ value })
-      },
-      up10: (req, res) => {
-        const value = parseInt(req.body.value, 10) + 10
-        res.send({ value })
-      },
-    },
-  },
-}
+import db from './db'
+// import passport from './passport'
+
+import actions from './services'
 
 // gather settings for the servers.
 // these are the default settings and could be omitted.
