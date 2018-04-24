@@ -1,42 +1,38 @@
 {
-  "name": "hyperconnect-example",
-  "version": "1.0.0",
-  "description": "hyperapp action based render and api server",
+  "name": "hyperconnect-login",
+  "version": "0.0.1",
+  "description": "hyperapp action based forms",
   "main": "src",
   "scripts": {
     "start": "NODE_ENV=production rollup -c",
     "dev": "NODE_ENV=development rollup -c -w",
-    "clean": "rm -rf public/js/*",
     "build": "NODE_ENV=development rollup -c",
-    "format": "prettier --semi false --single-quote --trailing-comma es5 --write ./src/**/*.js",
+    "format": "f -w",
+    "format:check": "f",
     "server": "npm run build && nodemon -w src/server -- dist/server.js"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "license": "MIT",
   "devDependencies": {
+    "@magic/test": "github:magic/test",
     "babel-core": "6.26.0",
-    "babel-preset-env": "1.6.1",
     "nodemon": "1.17.2",
-    "prettier": "1.11.1",
     "rollup": "0.57.1",
     "rollup-plugin-babel": "3.0.3",
+    "rollup-plugin-commonjs": "9.1.0",
     "rollup-plugin-jsx": "1.0.3",
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-uglify": "3.0.0"
   },
   "dependencies": {
-    "hyperapp": "1.2.5",
+    "@hyperapp/router": "0.5.1",
     "@hyperconnect/client": "github:hyperapp-connect/client",
-    "@hyperconnect/server": "github:hyperapp-connect/server"
-  },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "modules": false
-        }
-      ]
-    ]
+    "@hyperconnect/server": "github:hyperapp-connect/server",
+    "@magic/cryptography": "github:magic/cryptography",
+    "hyperapp": "1.2.5",
+    "leveldown": "3.0.0",
+    "levelup": "2.0.2",
+    "passport": "0.4.0",
+    "passport-local": "1.0.0"
   }
 }
