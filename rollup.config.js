@@ -2,6 +2,7 @@ const jsx = require('rollup-plugin-jsx')
 const resolve = require('rollup-plugin-node-resolve')
 const babel = require('rollup-plugin-babel')
 const uglify = require('rollup-plugin-uglify')
+const commonjs = require('rollup-plugin-commonjs')
 
 const path = require('path')
 
@@ -78,8 +79,18 @@ module.exports = [
     format: 'cjs',
     sourcemap: true,
   },
-  external: ['@hyperconnect/server'],
-  // watch: env === 'development',
+  external: [
+    '@magic/cryptography',
+    'levelup',
+    'leveldown',
+    'passport',
+    'passport-local',
+    'ws',
+    'express',
+    'path',
+    'fs',
+    'stream',
+  ],
   plugins: [
     // enable jsx in hyperapp
     jsx({ factory: 'h' }),
