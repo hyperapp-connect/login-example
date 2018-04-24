@@ -1,30 +1,131 @@
 import { h } from 'hyperapp'
 import { mapActions } from '@hyperconnect/client'
 
-// just a usual hyperapp state
+import { validateForm } from '@hyperconnect/form'
+
+import Home from './views'
+import Login from './views/Login'
+import Register from './views/Register'
+import E404 from './views/E404'
+
+import Menu from './components/Menu'
+
+import { Route, location } from '@hyperapp/router'
+
 export const state = {
+  location: location.state,
+
   counter: {
     value: 0,
   },
-}
 
-// just usual hyperapp actions.
-// careful, remote actions overwrite actions.
-export const local = {
-  local: val => () => ({ input: val }),
-  counter: {
-    up20: val => state => ({ value: state.value + 20 }),
+  user: {
+    name: '',
+    email: '',
+    token: '',
+  },
+
+  forms: {
+    login: {
+      action: 'login',
+      method: 'POST',
+      inputs: {
+        name: {
+          type: 'text',
+          placeholder: 'Your username',
+          min: 6,
+          required: true,
+        },
+        password: {
+          type: 'password',
+          placeholder: '*********',
+          min: 6,
+          required: true,
+        },
+      },
+    },
+
+    register: {
+      action: 'register',
+      method: 'POST',
+      inputs: {
+        name: {
+          type: 'text',
+          placeholder: 'Your username',
+          min: 6,
+          required: true,
+        },
+        email: {
+          type: 'email',
+          placeholder: 'Your email',
+          min: 4,
+          required: true,
+        },
+        password: {
+          type: 'password',
+          placeholder: '*********',
+          min: 6,
+          required: true,
+        },
+        password2: {
+          type: 'password',
+          equal: 'password',
+          placeholder: '*********',
+          min: 6,
+          required: true,
+        },
+      },
+    },
   },
 }
 
-// remote actions first get wrapped to allow server roundtrips
-// and then merged into the actions
+export const local = {
+  location: location.actions,
+
+  user: {
+    login: res => () => console.log('user login callback', { res }) || res,
+    register: res => () => console.log('register callback', { res }) || res,
+  },
+
+  forms: {
+    login: {
+      validate: validateForm,
+    },
+    register: {
+      validate: validateForm,
+    },
+  },
+}
+
 export const remote = {
-  counter: {
-    down: res => () => res,
-    down10: res => () => res,
-    up: res => () => res,
-    up10: res => () => res,
+  forms: {
+    login: {
+      submit: res => {
+        console.log('login submit_done', { res })
+        if (res.ok) {
+          actions.user.login(res)
+          return
+        }
+
+        return {
+          errors: res.errors,
+        }
+      },
+    },
+
+    register: {
+      submit: res => (state, actions) => {
+        console.log('register submit done', { state, actions, res })
+        if (res.ok) {
+          actions.user.register(res)
+          return
+        }
+
+        return {
+          errors: res.errors,
+        }
+      },
+    },
   },
 }
 
@@ -34,18 +135,13 @@ export const actions = mapActions(local, remote)
 // just a usual hyperapp view
 export const view = (state, actions) => (
   <div>
-    <h1>{state.counter.value}</h1>
+    <Menu />
 
-    <div>{JSON.stringify(state)}</div>
+    <Route path="/login" render={Login(state, actions)} />
+    <Route path="/register" render={Register(state, actions)} />
+    <Route path="/" render={Home} />
+    <Route path="*" render={E404()} />
 
-    <button onclick={() => actions.counter.up()}>+</button>
-    <button onclick={() => actions.counter.up10()}>+10</button>
-    <button onclick={() => actions.counter.up20()}>+20</button>
-
-    <button onclick={() => actions.counter.down()}>-</button>
-    <button onclick={() => actions.counter.down10()}>-10</button>
-
-    <input type="text" onkeyup={e => actions.local(e.target.value)} />
-    <span>text, no server roundtrip: {state.input}</span>
+    {JSON.stringify(state)}
   </div>
 )

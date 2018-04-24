@@ -1,4 +1,5 @@
 import { app } from 'hyperapp'
+import { location } from '@hyperapp/router'
 import { connect } from '@hyperconnect/client'
 
 import { state, actions, view } from './client'
@@ -14,3 +15,5 @@ const options = {
 
 // wires the app and mounts it.
 export const ws = connect(connected, options)
+
+export const router = location.subscribe(connected.location)
