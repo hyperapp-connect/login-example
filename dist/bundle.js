@@ -152,8 +152,7 @@ var app = (function (exports) {
     }
 
     function updateAttribute(element, name, value, oldValue, isSvg) {
-      if (name === "key") {
-      } else if (name === "style") {
+      if (name === "key") ; else if (name === "style") {
         for (var i in clone(oldValue, value)) {
           var style = value == null || value[i] == null ? "" : value[i];
           if (i[0] === "-") {
@@ -283,8 +282,7 @@ var app = (function (exports) {
     }
 
     function patch(parent, element, oldNode, node, isSvg) {
-      if (node === oldNode) {
-      } else if (oldNode == null || oldNode.nodeName !== node.nodeName) {
+      if (node === oldNode) ; else if (oldNode == null || oldNode.nodeName !== node.nodeName) {
         var newElement = createElement(node, isSvg);
         parent.insertBefore(newElement, element);
 
@@ -376,7 +374,168 @@ var app = (function (exports) {
     }
   }
 
-  let ws = {};
+  function getOrigin(loc) {
+    return loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "")
+  }
+
+  function isExternal(anchorElement) {
+    // Location.origin and HTMLAnchorElement.origin are not
+    // supported by IE and Safari.
+    return getOrigin(location) !== getOrigin(anchorElement)
+  }
+
+  function Link(props, children) {
+    return function(state, actions) {
+      var to = props.to;
+      var location = state.location;
+      var onclick = props.onclick;
+      delete props.to;
+      delete props.location;
+
+      props.href = to;
+      props.onclick = function(e) {
+        if (onclick) {
+          onclick(e);
+        }
+        if (
+          e.defaultPrevented ||
+          e.button !== 0 ||
+          e.altKey ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          props.target === "_blank" ||
+          isExternal(e.currentTarget)
+        ) ; else {
+          e.preventDefault();
+
+          if (to !== location.pathname) {
+            history.pushState(location.pathname, "", to);
+          }
+        }
+      };
+
+      return h("a", props, children)
+    }
+  }
+
+  function createMatch(isExact, path, url, params) {
+    return {
+      isExact: isExact,
+      path: path,
+      url: url,
+      params: params
+    }
+  }
+
+  function trimTrailingSlash(url) {
+    for (var len = url.length; "/" === url[--len]; );
+    return url.slice(0, len + 1)
+  }
+
+  function decodeParam(val) {
+    try {
+      return decodeURIComponent(val)
+    } catch (e) {
+      return val
+    }
+  }
+
+  function parseRoute(path, url, options) {
+    if (path === url || !path) {
+      return createMatch(path === url, path, url)
+    }
+
+    var exact = options && options.exact;
+    var paths = trimTrailingSlash(path).split("/");
+    var urls = trimTrailingSlash(url).split("/");
+
+    if (paths.length > urls.length || (exact && paths.length < urls.length)) {
+      return
+    }
+
+    for (var i = 0, params = {}, len = paths.length, url = ""; i < len; i++) {
+      if (":" === paths[i][0]) {
+        params[paths[i].slice(1)] = urls[i] = decodeParam(urls[i]);
+      } else if (paths[i] !== urls[i]) {
+        return
+      }
+      url += urls[i] + "/";
+    }
+
+    return createMatch(false, path, url.slice(0, -1), params)
+  }
+
+  function Route(props) {
+    return function(state, actions) {
+      var location = state.location;
+      var match = parseRoute(props.path, location.pathname, {
+        exact: !props.parent
+      });
+
+      return (
+        match &&
+        props.render({
+          match: match,
+          location: location
+        })
+      )
+    }
+  }
+
+  function wrapHistory(keys) {
+    return keys.reduce(function(next, key) {
+      var fn = history[key];
+
+      history[key] = function(data, title, url) {
+        fn.call(this, data, title, url);
+        dispatchEvent(new CustomEvent("pushstate", { detail: data }));
+      };
+
+      return function() {
+        history[key] = fn;
+        next && next();
+      }
+    }, null)
+  }
+
+  var location$1 = {
+    state: {
+      pathname: window.location.pathname,
+      previous: window.location.pathname
+    },
+    actions: {
+      go: function(pathname) {
+        history.pushState(null, "", pathname);
+      },
+      set: function(data) {
+        return data
+      }
+    },
+    subscribe: function(actions) {
+      function handleLocationChange(e) {
+        actions.set({
+          pathname: window.location.pathname,
+          previous: e.detail
+            ? (window.location.previous = e.detail)
+            : window.location.previous
+        });
+      }
+
+      var unwrap = wrapHistory(["pushState", "replaceState"]);
+
+      addEventListener("pushstate", handleLocationChange);
+      addEventListener("popstate", handleLocationChange);
+
+      return function() {
+        removeEventListener("pushstate", handleLocationChange);
+        removeEventListener("popstate", handleLocationChange);
+        unwrap();
+      }
+    }
+  };
+
+  let ws = undefined;
 
   const cache = [];
   let open = false;
@@ -428,9 +587,8 @@ var app = (function (exports) {
         const sub = action[fnName];
         if (isFunction(sub)) {
           action = sub;
-          return
         } else {
-          action = actions[key];
+          action = action[key];
         }
       });
 
@@ -459,9 +617,10 @@ var app = (function (exports) {
     apiVersion = options.apiVersion || "v0";
     error = options.error || error;
 
-    ws = new WebSocket(`${protocol}://${host}:${port}`);
-
-    open = false;
+    if (!ws) {
+      ws = new WebSocket(`${protocol}://${host}:${port}`);
+      open = false;
+    }
 
     const react = reactions(actions);
 
@@ -472,19 +631,24 @@ var app = (function (exports) {
     return ws
   };
 
-  const send = msg => (open ? ws.send(stringify(msg)) : cache.push(msg));
+  const send = msg => {
+    if (open) {
+      ws.send(stringify(msg));
+    } else {
+      cache.push(msg);
+    }
+  };
 
   const map = (actions = {}, remote = {}, parent = null) => {
     Object.keys(remote).forEach(name => {
       const action = remote[name];
+      const key = parent ? `${parent}.${name}` : name;
 
       if (typeof action === "function") {
         actions[name + "_done"] = action;
 
-        actions[name] = (state, actions) => data => {
-          const key = parent ? `${parent}.${name}` : name;
-          const msg = [key, data].filter(e => !!e);
-
+        actions[name] = data => {
+          const msg = [key, data];
           send(msg);
         };
 
@@ -492,8 +656,7 @@ var app = (function (exports) {
       }
 
       if (typeof action === "object") {
-        const remoteActions = map({}, action, name);
-        actions[name] = Object.assign({}, actions[name], remoteActions);
+        actions[name] = map(actions[name], action, key);
         return
       }
     });
@@ -504,87 +667,293 @@ var app = (function (exports) {
   const connect$1 = connect;
   const mapActions = map;
 
-  // just a usual hyperapp state
-  var state = {
-    counter: {
-      value: 0
+  const ErrorMsg = ({ error }) => {
+    if (!error || error.length === 0) {
+      return
     }
 
-    // just usual hyperapp actions.
-    // careful, remote actions overwrite actions.
-  };var local = {
-    local: function local(val) {
-      return function () {
-        return { input: val };
-      };
-    },
-    counter: {
-      up20: function up20(val) {
-        return function (state) {
-          return { value: state.value + 20 };
-        };
+    if (typeof error === 'string') {
+      return (
+        h('div', {
+          style: {
+            color: 'red',
+          }
+        }, [
+          error
+        ])
+      )
+    }
+
+    if (Array.isArray(error) || typeof error === 'object') {
+      return Object.keys(error).map(key =>
+        ErrorMsg({ error: `${key} ${JSON.stringify(error[key])}` }),
+      )
+    }
+  };
+
+  const Input = (props = {}) => (
+    h('input', {
+      type: props.type || 'text',
+      placeholder: props.placeholder,
+      min: props.min,
+      max: props.max,
+      equal: props.equal,
+      required: props.required,
+      name: props.name}
+    )
+  );
+
+  const capitalize = str => `${str.charAt(0).toUpperCase()}${str.slice(1)}`;
+
+  const validateInput = ({ input, inputs }) => {
+    if (!input || input.type === 'submit' || !input.name) {
+      return
+    }
+
+    const { name, value, type, required, max, min, equal } = input;
+    let error = undefined;
+
+    if (required && !value) {
+      error = 'Please enter a value';
+    } else if (min && value.length < parseInt(min, 10)) {
+      error = `${capitalize(name)} is too short`;
+    } else if (max && value.length > parseInt(max, 10)) {
+      error = `${capitalize(name)} is too long`;
+    }
+
+    if (type === 'email' && value.indexOf('@') === -1) {
+      error = 'Email must be valid';
+    }
+
+    if (equal) {
+      const ele = inputs[equal].value;
+      if (!value || !ele || value !== ele) {
+        error = `${capitalize(equal)}s must be equal`;
       }
     }
 
-    // remote actions first get wrapped to allow server roundtrips
-    // and then merged into the actions
-  };var remote = {
+    return error
+  };
+
+  const validateForm = ({ evt, state }) => {
+    const errors = {};
+    let hasErrored = false;
+
+    const inputs = evt.currentTarget.getElementsByTagName('input');
+
+    Object.keys(state.inputs)
+      .filter(k => state.inputs[k].type !== 'submit')
+      .map(key => {
+        const input = state.inputs[key];
+        input.name = key;
+        input.value = inputs[key].value;
+        const err = validateInput({ input, inputs });
+
+        if (err) {
+          errors.inputs = errors.inputs || {};
+          errors.inputs[key] = err;
+          hasErrored = true;
+        }
+      });
+
+    return { errors, hasErrored }
+  };
+
+  const submit = (state, actions) => evt => {
+    evt.preventDefault();
+
+    const { hasErrored } = validateForm({ evt, form, state });
+
+    if (hasErrored) {
+      return
+    }
+
+    const data = {};
+    Object.keys(state.inputs).map(key => {
+      data[key] = state.inputs[key].value;
+    });
+
+    form.submit(data);
+  };
+
+  const Form$1 = ({ actions, errors, state, form, title, submitValue }) => (
+    h('form', {
+      novalidate: true,
+      action: state.action,
+      method: state.method || 'POST',
+      onsubmit: submit(state, actions),
+      onchange: evt => form.validate({ evt, form, state })
+    }, [
+      title && (
+        h('legend', null, [
+          h('h2', null, [title])
+        ])
+      ),
+      ErrorMsg({error: state.errors && state.errors.submit}),
+      h('fieldset', null, [
+        Object.keys(state.inputs).map(k => (
+          h('div', null, [
+            Input(Object.assign({name: k}, state.inputs[k])),
+            ErrorMsg({error: state.hasErrored && state.errors.inputs[k]})
+          ])
+        ))
+      ]),
+
+      h('input', {type: "submit", value: submitValue || 'Submit'})
+    ])
+  );
+
+  const view = () => h('div', null, [h('h1', null, ["Welcome."]), h('div', null, ["This app is a simple login/registration example."])]);
+
+  const view$1 = (state, actions) => () => h('div', null, [h('h2', null, ["Login"]), Form$1({
+    form: actions.forms.login,
+    state: state.forms.login,
+    actions: actions })]);
+
+  const view$2 = (state, actions) => () => h('div', null, [h('h1', null, ["Register"]), Form$1({ form: actions.forms.register, state: state.forms.register })]);
+
+  const view$3 = (state, actions) => () => h('div', null, ["404 - Not found"]);
+
+  const view$4 = () => h('ul', null, [h('li', null, [Link({ to: "/" }, ["Home"])]), h('li', null, [Link({ to: "/login" }, ["Login"])]), h('li', null, [Link({ to: "/register" }, ["Register"])])]);
+
+  const state = {
+    location: location$1.state,
+
     counter: {
-      down: function down(res) {
-        return function () {
-          return res;
-        };
+      value: 0
+    },
+
+    user: {
+      name: '',
+      email: '',
+      token: ''
+    },
+
+    forms: {
+      login: {
+        action: 'login',
+        method: 'POST',
+        inputs: {
+          name: {
+            type: 'text',
+            placeholder: 'Your username',
+            min: 6,
+            required: true
+          },
+          password: {
+            type: 'password',
+            placeholder: '*********',
+            min: 6,
+            required: true
+          }
+        }
       },
-      down10: function down10(res) {
-        return function () {
-          return res;
-        };
+
+      register: {
+        action: 'register',
+        method: 'POST',
+        inputs: {
+          name: {
+            type: 'text',
+            placeholder: 'Your username',
+            min: 6,
+            required: true
+          },
+          email: {
+            type: 'email',
+            placeholder: 'Your email',
+            min: 4,
+            required: true
+          },
+          password: {
+            type: 'password',
+            placeholder: '*********',
+            min: 6,
+            required: true
+          },
+          password2: {
+            type: 'password',
+            equal: 'password',
+            placeholder: '*********',
+            min: 6,
+            required: true
+          }
+        }
+      }
+    }
+  };
+
+  const local = {
+    location: location$1.actions,
+
+    user: {
+      login: res => () => console.log('user login callback', { res }) || res,
+      register: res => () => console.log('register callback', { res }) || res
+    },
+
+    forms: {
+      login: {
+        validate: validateForm
       },
-      up: function up(res) {
-        return function () {
-          return res;
-        };
+      register: {
+        validate: validateForm
+      }
+    }
+  };
+
+  const remote = {
+    forms: {
+      login: {
+        submit: res => {
+          console.log('login submit_done', { res });
+          if (res.ok) {
+            actions.user.login(res);
+            return;
+          }
+
+          return {
+            errors: res.errors
+          };
+        }
       },
-      up10: function up10(res) {
-        return function () {
-          return res;
-        };
+
+      register: {
+        submit: res => (state, actions) => {
+          console.log('register submit done', { state, actions, res });
+          if (res.ok) {
+            actions.user.register(res);
+            return;
+          }
+
+          return {
+            errors: res.errors
+          };
+        }
       }
     }
 
     // create the actions
-  };var actions = mapActions(local, remote);
+  };const actions = mapActions(local, remote);
 
   // just a usual hyperapp view
-  var view = function view(state, actions) {
-    return h('div', null, [h('h1', null, [state.counter.value]), h('div', null, [JSON.stringify(state)]), h('button', { onclick: function onclick() {
-        return actions.counter.up();
-      } }, ["+"]), h('button', { onclick: function onclick() {
-        return actions.counter.up10();
-      } }, ["+10"]), h('button', { onclick: function onclick() {
-        return actions.counter.up20();
-      } }, ["+20"]), h('button', { onclick: function onclick() {
-        return actions.counter.down();
-      } }, ["-"]), h('button', { onclick: function onclick() {
-        return actions.counter.down10();
-      } }, ["-10"]), h('input', { type: "text", onkeyup: function onkeyup(e) {
-        return actions.local(e.target.value);
-      } }), h('span', null, ["text, no server roundtrip: ", state.input])]);
-  };
+  const view$5 = (state, actions) => h('div', null, [view$4(), Route({ path: "/login", render: view$1(state, actions) }), Route({ path: "/register", render: view$2(state, actions) }), Route({ path: "/", render: view }), Route({ path: "*", render: view$3() }), JSON.stringify(state)]);
 
-  var connected = app(state, actions, view, document.body);
+  const connected = app(state, actions, view$5, document.body);
 
   // socket server connection options
-  var options = {
+  const options = {
     host: 'localhost',
     protocol: 'ws',
     port: 3001
 
     // wires the app and mounts it.
-  };var ws$1 = connect$1(connected, options);
+  };const ws$1 = connect$1(connected, options);
+
+  const router = location$1.subscribe(connected.location);
 
   exports.connected = connected;
   exports.ws = ws$1;
+  exports.router = router;
 
   return exports;
 
