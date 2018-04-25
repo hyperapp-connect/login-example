@@ -40,6 +40,7 @@ export const state = {
           type: 'password',
           placeholder: '*********',
           min: 6,
+          noState: true,
           required: true,
         },
       },
@@ -65,6 +66,7 @@ export const state = {
           type: 'password',
           placeholder: '*********',
           min: 6,
+          noState: true,
           required: true,
         },
         password2: {
@@ -72,6 +74,7 @@ export const state = {
           equal: 'password',
           placeholder: '*********',
           min: 6,
+          noState: true,
           required: true,
         },
       },
@@ -114,7 +117,7 @@ export const remote = {
     },
 
     register: {
-      submit: res => (state, actions) => {
+      submit: res => {
         console.log('register submit done', { state, actions, res })
         if (res.ok) {
           actions.user.register(res)
