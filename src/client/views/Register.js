@@ -4,7 +4,11 @@ import { Form } from '@hyperconnect/form'
 export const view = (state, actions) => () => (
   <div>
     <h1>Register</h1>
-    <Form form={actions.forms.register} state={state.forms.register} />
+    <Form
+      form={actions.forms.register}
+      state={state.forms.register}
+      actions={actions}
+    />
   </div>
 )
 
