@@ -3,3 +3,4 @@ npm-debug.log
 yarn-error.log
 src/client/public/js/*
 db
+dev.sqlite3

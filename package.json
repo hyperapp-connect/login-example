@@ -4,12 +4,14 @@
   "description": "hyperapp action based forms",
   "main": "src",
   "scripts": {
-    "start": "NODE_ENV=production rollup -c",
+    "start": "NODE_ENV=production npm run build && npm run server",
     "dev": "NODE_ENV=development rollup -c -w",
-    "build": "NODE_ENV=development rollup -c",
+    "build": "rollup -c",
     "format": "f -w",
+    "server": "nodemon -w src/server -- dist/server.js",
     "format:check": "f",
-    "server": "npm run build && nodemon -w src/server -- dist/server.js"
+    "migrate": "knex migrate:latest",
+    "seed": "knex seed:run"
   },
   "author": "Jascha Ehrenreich <jascha@jaeh.at>",
   "license": "MIT",
@@ -19,7 +21,6 @@
     "nodemon": "1.17.3",
     "rollup": "0.58.2",
     "rollup-plugin-babel": "3.0.4",
-    "rollup-plugin-commonjs": "9.1.0",
     "rollup-plugin-jsx": "1.0.3",
     "rollup-plugin-node-resolve": "3.3.0",
     "rollup-plugin-uglify": "3.0.0"
@@ -31,9 +32,13 @@
     "@hyperconnect/server": "github:hyperapp-connect/server",
     "@magic/cryptography": "github:magic/cryptography",
     "hyperapp": "1.2.5",
-    "leveldown": "3.0.0",
-    "levelup": "2.0.2",
+    "knex": "0.14.6",
     "passport": "0.4.0",
-    "passport-local": "1.0.0"
+    "passport-local": "1.0.0",
+    "sqlite3": "4.0.0"
+  },
+  "events": {
+    "restart": "npm run build",
+    "start": "npm run build"
   }
 }

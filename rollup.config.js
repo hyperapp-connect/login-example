@@ -81,8 +81,6 @@ module.exports = [
   },
   external: [
     '@magic/cryptography',
-    'levelup',
-    'leveldown',
     'passport',
     'passport-local',
     'ws',
@@ -90,6 +88,7 @@ module.exports = [
     'path',
     'fs',
     'stream',
+    'knex',
   ],
   plugins: [
     // enable jsx in hyperapp
