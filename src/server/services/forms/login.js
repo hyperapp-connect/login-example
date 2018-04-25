@@ -1,12 +1,18 @@
+import { hash, random } from '@magic/cryptography'
+
 export const submit = async (req, res) => {
   const { name, password } = req.body
 
   let error = undefined
   let user = undefined
-  try {
-    user = await db.get(name)
 
-    const compared = password && password === user.password
+  try {
+    user = await res
+      .db('users')
+      .first(['password', 'email'])
+      .where({ name })
+
+    const compared = await hash.compare(password, user.password)
 
     if (!compared) {
       error = 'Invalid Password'
@@ -26,7 +32,8 @@ export const submit = async (req, res) => {
   if (error) {
     data.error = error
   } else {
-    data.token = random.bytes()
+    const token = await random.bytes()
+    data.user = { name, ...user, token }
   }
 
   console.log('response data', data)

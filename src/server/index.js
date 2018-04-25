@@ -3,10 +3,9 @@ import { random } from '@magic/cryptography'
 
 import * as client from '../client/client'
 
-import db from './db'
-// import passport from './passport'
-
 import actions from './services'
+
+import db from './db'
 
 // gather settings for the servers.
 // these are the default settings and could be omitted.
@@ -24,7 +23,8 @@ const props = {
     bundleUrl: '/js/bundle.js',
   },
   client,
+  db,
 }
 
 // start websockets and http server
-const { socket, http } = init(props)
+init(props)

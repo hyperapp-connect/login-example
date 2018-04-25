@@ -1,32 +1,19 @@
-import levelup from 'levelup'
-import leveldown from 'leveldown'
+import fs from 'fs'
+import path from 'path'
 
-// 1) Create our store
-const db = levelup(leveldown('./db'))
+import knex from 'knex'
 
-//
-// const put = async () => {
-//
-//   try {
-//     // 2) Put a key & value
-//     const insert = await db.put('name', 'levelup')
-//   }
-//   catch (e) {
-//     throw e
-//   }
-//
-//   try {
-//     // 3) Fetch by key
-//     const res = db.get('name', (err, value) => {
-//       if (err) return console.log('Ooops!', err) // likely the key was not found
-//
-//       // Ta da!
-//       console.log('name=' + value)
-//     })
-//   }
-//   catch (e) {
-//     throw e
-//   }
-// }
+const configString = fs.readFileSync(path.join(process.cwd(), 'knexfile.json'))
+const config = JSON.parse(configString)
+
+const env = process.env.NODE_ENV || 'development'
+
+const dbConfig = config[env] || config['development']
+
+let db
+if (!db) {
+  db = knex(config[env])
+  db.migrate.latest().then(() => db.seed.run())
+}
 
 export default db

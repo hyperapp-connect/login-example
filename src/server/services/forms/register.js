@@ -1,11 +1,18 @@
+import { hash, random } from '@magic/cryptography'
+
 export const submit = async (req, res) => {
   let error = undefined
   let user = undefined
-  try {
-    const { name, password, email } = req.body
-    console.log('user registration', { name, password, email })
 
-    user = await db.put(name, { password, email })
+  try {
+    const { name, password, password2, email } = req.body
+    const pwHash = await hash(password)
+
+    if (password !== password2) {
+      throw new Error('Password mismatch')
+    }
+
+    await res.db.table('users').insert({ name, password: pwHash, email })
   } catch (e) {
     error = e
   }
@@ -14,13 +21,11 @@ export const submit = async (req, res) => {
     ok: !error,
   }
 
-  const { password, password2, ...userData } = user
-
   if (error) {
     data.error = error
   } else {
-    data.user = userData
-    data.user.token = random.bytes()
+    const token = await random.bytes()
+    data.user = { name, email, token }
   }
 
   res.send(data)
