@@ -13,7 +13,9 @@ const dbConfig = config[env] || config['development']
 export let db
 if (!db) {
   db = knex(config[env])
-  db.migrate.latest().then(() => db.seed.run())
+  if (!db.schema.hasTable('users')) {
+    db.migrate.latest().then(() => db.seed.run())
+  }
 }
 
 export default db
