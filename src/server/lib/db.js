@@ -10,7 +10,7 @@ const env = process.env.NODE_ENV || 'development'
 
 const dbConfig = config[env] || config['development']
 
-let db
+export let db
 if (!db) {
   db = knex(config[env])
   db.migrate.latest().then(() => db.seed.run())

@@ -6,4 +6,5 @@ export const actions = {
   },
 }
 
+export { db } from './db'
 export default actions
