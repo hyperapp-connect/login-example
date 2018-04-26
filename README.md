@@ -2,7 +2,7 @@
 
 WIP
 
-This is a minimal example of using [hyperconnect](https://github.com/hyperapp-connect/connect)
+This is an example of using [hyperconnect](https://github.com/hyperapp-connect/connect)
 to connect your hyperapp to an action-driven websocket/http api server.
 
 Action-driven means that all you need to add to make an action resolve serverside is a ... server executed action.
