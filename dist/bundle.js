@@ -759,7 +759,7 @@ var app = (function (exports) {
     return { errors, hasErrored }
   };
 
-  const submit = (state, actions) => evt => {
+  const submit = (form, state, actions) => evt => {
     evt.preventDefault();
 
     const { hasErrored } = validateForm({ evt, form, state });
@@ -781,7 +781,7 @@ var app = (function (exports) {
       novalidate: true,
       action: state.action,
       method: state.method || 'POST',
-      onsubmit: submit(state, actions),
+      onsubmit: submit(form, state, actions),
       onchange: evt => form.validate({ evt, form, state })
     }, [
       title && (
@@ -810,7 +810,10 @@ var app = (function (exports) {
     state: state.forms.login,
     actions: actions })]);
 
-  const view$2 = (state, actions) => () => h('div', null, [h('h1', null, ["Register"]), Form$1({ form: actions.forms.register, state: state.forms.register })]);
+  const view$2 = (state, actions) => () => h('div', null, [h('h1', null, ["Register"]), Form$1({
+    form: actions.forms.register,
+    state: state.forms.register,
+    actions: actions })]);
 
   const view$3 = (state, actions) => () => h('div', null, ["404 - Not found"]);
 
@@ -844,6 +847,7 @@ var app = (function (exports) {
             type: 'password',
             placeholder: '*********',
             min: 6,
+            noState: true,
             required: true
           }
         }
@@ -869,6 +873,7 @@ var app = (function (exports) {
             type: 'password',
             placeholder: '*********',
             min: 6,
+            noState: true,
             required: true
           },
           password2: {
@@ -876,6 +881,7 @@ var app = (function (exports) {
             equal: 'password',
             placeholder: '*********',
             min: 6,
+            noState: true,
             required: true
           }
         }
@@ -918,7 +924,7 @@ var app = (function (exports) {
       },
 
       register: {
-        submit: res => (state, actions) => {
+        submit: res => {
           console.log('register submit done', { state, actions, res });
           if (res.ok) {
             actions.user.register(res);

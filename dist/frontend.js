@@ -2,83 +2,26 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var ws = require('ws');
+require('ws');
 var stream = require('stream');
 var fs = _interopDefault(require('fs'));
 var path = _interopDefault(require('path'));
 var express = _interopDefault(require('express'));
-var levelup = _interopDefault(require('levelup'));
-var leveldown = _interopDefault(require('leveldown'));
-require('@magic/cryptography');
+var cryptography = require('@magic/cryptography');
+var knex = _interopDefault(require('knex'));
 
-const mapActions = ({ actions, name }) => {
-  let action = actions;
-
-  name.split(".").forEach(k => {
-    if (typeof action !== "function" && action[k]) {
-      action = action[k];
+const flattenActions = a => {
+  const b = {};
+  Object.keys(a).forEach(k => {
+    const act = a[k];
+    if (typeof act === 'object') {
+      b[k] = flattenActions(a[k]);
+    } else if (typeof act === 'function') {
+      b[k] = 'action';
     }
   });
 
-  return action
-};
-
-const { Server } = ws;
-
-const defaultProps = {
-  host: "localhost",
-  port: 3001,
-  protocol: "ws",
-  actions: {}
-};
-
-const init = async props => {
-  const server = await new Server(props);
-
-  server.on("connection", client => {
-    client.on("message", msg => {
-      try {
-        msg = JSON.parse(msg);
-      } catch (err) {
-        props.error(err);
-      }
-
-      const [name, body] = msg;
-
-      const request = {
-        name,
-        body,
-        client
-      };
-
-      console.log("receive", name, body);
-
-      const response = {
-        send: data => {
-          const res = [name.replace("v0.", "")];
-
-          if (data) {
-            res.push(data);
-          }
-
-          console.log("send", res);
-
-          client.send(JSON.stringify(res));
-        }
-      };
-
-      const action = mapActions({ actions: props.actions, name: request.name });
-
-      if (typeof action === "function") {
-        action(request, response);
-      } else {
-        client.send("Unknown Action");
-      }
-    });
-  });
-
-  console.log(`socket server listening on ${props.port}`);
-  return server
+  return b
 };
 
 function h(name, attributes) {
@@ -652,27 +595,29 @@ function withRender$1(nextApp) {
   };
 }
 
-const fp = path.join(process.cwd(), "src", "client", "index.html");
+const fp = path.join(process.cwd(), 'src', 'client', 'index.html');
 const html = fs.readFileSync(fp).toString();
-const splitPoint = "<body>";
+const splitPoint = '<body>';
 const [head, footer] = html.split(splitPoint);
 
 const render = props => (req, res) => {
-  res.type("text/html");
+  res.type('text/html');
   res.write(head + splitPoint);
 
   const { client } = props;
 
+  const pathname = req.path;
   // make the router render the correct view
   client.state.location = {
-    pathname: req.path
+    pathname,
+    prev: pathname,
   };
 
   const main = withRender$1(app)(client.state, client.actions, client.view);
   const stream$$1 = main.toStream();
 
   stream$$1.pipe(res, { end: false });
-  stream$$1.on("end", () => {
+  stream$$1.on('end', () => {
     res.write(footer);
     res.end();
   });
@@ -680,52 +625,32 @@ const render = props => (req, res) => {
 
 const router = express.Router();
 
-const routeActions = props => {
+const routeActions = (props = {}) => {
 
   Object.keys(props.actions).forEach(name => {
     const action = props.actions[name];
     const path$$1 = props.parent ? `${props.parent}/${name}` : `/${name}`;
 
-    if (typeof action === "object") {
+    if (typeof action === 'object') {
       routeActions({ parent: path$$1, actions: action, router });
     }
 
-    if (typeof action === "function") {
+    if (typeof action === 'function') {
       props.router.get(path$$1, (req, res) =>
-        res.end("GET not supported, use POST")
+        res.end('GET not supported, use POST'),
       );
       props.router.post(path$$1, action);
     }
   });
 };
 
-const init$1 = ({ actions }) => {
-  // middleware that is specific to this router
-  router.use((req, res, next) => {
-    console.log("Time: ", Date.now());
-    next();
-  });
-
+const routes = ({ actions }) => {
   // define the home route
-  router.get("/", (req, res) => {
-    res.redirect("/v0");
+  router.get('/', (req, res) => {
+    res.redirect('/v0');
   });
 
-  const flattenActions = a => {
-    const b = {};
-    Object.keys(a).forEach(k => {
-      const act = a[k];
-      if (typeof act === "object") {
-        b[k] = flattenActions(a[k]);
-      } else if (typeof act === "function") {
-        b[k] = "action";
-      }
-    });
-
-    return b
-  };
-
-  router.get("/v0", (req, res) => {
+  router.get('/v0', (req, res) => {
     const actionNames = flattenActions(actions);
     res.send(actionNames);
   });
@@ -739,40 +664,38 @@ const init$1 = ({ actions }) => {
 // if window is not set rendering will throw
 global.window = {
   location: {
-    pathname: "/"
-  }
+    pathname: '/',
+  },
 };
 
 const defaultProps$1 = {
-  host: "localhost",
+  host: 'localhost',
   port: 3000,
-  protocol: "http",
+  protocol: 'http',
   actions: {},
   serve: [
-    path.join(process.cwd(), "dist"),
-    path.join(process.cwd(), "src", "client", "assets")
-  ]
+    path.join(process.cwd(), 'dist'),
+    path.join(process.cwd(), 'src', 'client', 'assets'),
+  ],
 };
 
-const init$2 = async (p = {}) => {
+const http$1 = async (p = {}) => {
   const props = Object.assign({}, defaultProps$1, p);
   const { host, port, protocol, actions, serve, client } = props;
 
   const app = express();
 
-  serve.forEach(p => app.use(express.static(p, { index: "index.html" })));
+  serve.forEach(p => app.use(express.static(p, { index: 'index.html' })));
 
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
-  app.use("/api", init$1({ actions }));
+  app.use('/api', routes({ actions }));
 
   app.use((req, res, next) => {
-    // this is needed for ssr rendering the hyperapp/router
-    global.window = {
-      location: {
-        pathname: req.path
-      }
+    // this is needed for ssr rendering the hyperapp/routes
+    global.window.location = {
+      pathname: req.path,
     };
 
     next();
@@ -784,36 +707,7 @@ const init$2 = async (p = {}) => {
   return app
 };
 
-const env = process.env.NODE_ENV || "development";
-
-const quiet = e => {
-  console.error(e);
-};
-const loud = e => {
-  if (e instanceof Error) {
-    throw e
-  } else {
-    throw new Error(JSON.stringify(e))
-  }
-};
-
-const defaultProps$2 = {
-  error: env === "development" ? loud : quiet,
-  host: "localhost",
-  actions: {}
-};
-
-const init$3 = async (props = {}) => {
-  props = Object.assign({}, defaultProps$2, props);
-
-  const wsProps = Object.assign({}, defaultProps$2, defaultProps, props);
-  const httpProps = Object.assign({}, defaultProps$2, defaultProps$1, props);
-
-  const socket = await init(wsProps);
-  const http = await init$2(httpProps);
-
-  return { socket, http }
-};
+const env = process.env.NODE_ENV || 'development';
 
 let ws$1 = undefined;
 let open = false;
@@ -962,7 +856,7 @@ const validateForm = ({ evt, state }) => {
   return { errors, hasErrored }
 };
 
-const submit = (state, actions) => evt => {
+const submit = (form, state, actions) => evt => {
   evt.preventDefault();
 
   const { hasErrored } = validateForm({ evt, form, state });
@@ -984,7 +878,7 @@ const Form$1 = ({ actions, errors, state, form, title, submitValue }) => (
     novalidate: true,
     action: state.action,
     method: state.method || 'POST',
-    onsubmit: submit(state, actions),
+    onsubmit: submit(form, state, actions),
     onchange: evt => form.validate({ evt, form, state })
   }, [
     title && (
@@ -1028,7 +922,11 @@ const view$1 = (state, actions) => () => (
 const view$2 = (state, actions) => () => (
   h('div', null, [
     h('h1', null, ["Register"]),
-    Form$1({form: actions.forms.register, state: state.forms.register})
+    Form$1({
+      form: actions.forms.register,
+      state: state.forms.register,
+      actions: actions}
+    )
   ])
 );
 
@@ -1237,6 +1135,7 @@ const state = {
           type: 'password',
           placeholder: '*********',
           min: 6,
+          noState: true,
           required: true,
         },
       },
@@ -1262,6 +1161,7 @@ const state = {
           type: 'password',
           placeholder: '*********',
           min: 6,
+          noState: true,
           required: true,
         },
         password2: {
@@ -1269,6 +1169,7 @@ const state = {
           equal: 'password',
           placeholder: '*********',
           min: 6,
+          noState: true,
           required: true,
         },
       },
@@ -1311,7 +1212,7 @@ const remote = {
     },
 
     register: {
-      submit: res => (state, actions) => {
+      submit: res => {
         console.log('register submit done', { state, actions, res });
         if (res.ok) {
           actions.user.register(res);
@@ -1351,18 +1252,19 @@ var client = /*#__PURE__*/Object.freeze({
   view: view$5
 });
 
-// 1) Create our store
-const db$1 = levelup(leveldown('./db'));
-
 const submit$1 = async (req, res) => {
   const { name, password } = req.body;
 
   let error = undefined;
   let user = undefined;
-  try {
-    user = await db.get(name);
 
-    const compared = password && password === user.password;
+  try {
+    user = await res
+      .db('users')
+      .first(['password', 'email'])
+      .where({ name });
+
+    const compared = await cryptography.hash.compare(password, user.password);
 
     if (!compared) {
       error = 'Invalid Password';
@@ -1382,7 +1284,8 @@ const submit$1 = async (req, res) => {
   if (error) {
     data.error = error;
   } else {
-    data.token = random.bytes();
+    const token = await cryptography.random.bytes();
+    data.user = { name, ...user, token };
   }
 
   console.log('response data', data);
@@ -1396,12 +1299,16 @@ var login = /*#__PURE__*/Object.freeze({
 
 const submit$2 = async (req, res) => {
   let error = undefined;
-  let user = undefined;
-  try {
-    const { name, password, email } = req.body;
-    console.log('user registration', { name, password, email });
 
-    user = await db.put(name, { password, email });
+  try {
+    const { name, password, password2, email } = req.body;
+    const pwHash = await cryptography.hash(password);
+
+    if (password !== password2) {
+      throw new Error('Password mismatch')
+    }
+
+    await res.db.table('users').insert({ name, password: pwHash, email });
   } catch (e) {
     error = e;
   }
@@ -1410,13 +1317,11 @@ const submit$2 = async (req, res) => {
     ok: !error,
   };
 
-  const { password, password2, ...userData } = user;
-
   if (error) {
     data.error = error;
   } else {
-    data.user = userData;
-    data.user.token = random.bytes();
+    const token = await cryptography.random.bytes();
+    data.user = { name, email, token };
   }
 
   res.send(data);
@@ -1430,6 +1335,19 @@ const forms = {
   login,
   register,
 };
+
+const configString = fs.readFileSync(path.join(process.cwd(), 'knexfile.json'));
+const config = JSON.parse(configString);
+
+const env$1 = process.env.NODE_ENV || 'development';
+
+const dbConfig = config[env$1] || config['development'];
+
+let db;
+if (!db) {
+  db = knex(config[env$1]);
+  db.migrate.latest().then(() => db.seed.run());
+}
 
 const actions$1 = {
   v0: {
@@ -1453,8 +1371,9 @@ const props = {
     bundleUrl: '/js/bundle.js',
   },
   client,
+  db,
 };
 
 // start websockets and http server
-const { socket, http } = init$3(props);
-//# sourceMappingURL=server.js.map
+http$1(props);
+//# sourceMappingURL=frontend.js.map
