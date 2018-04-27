@@ -17,7 +17,7 @@
   "license": "MIT",
   "devDependencies": {
     "@magic/test": "github:magic/test",
-    "babel-core": "6.26.0",
+    "babel-core": "6.26.3",
     "nodemon": "1.17.3",
     "rollup": "0.58.2",
     "rollup-plugin-babel": "3.0.4",
