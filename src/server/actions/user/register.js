@@ -1,6 +1,6 @@
 import { hash, random } from '@magic/cryptography'
 
-export const submit = async (req, res) => {
+export const register = async (req, res) => {
   let error = undefined
   let user = undefined
 
@@ -30,3 +30,5 @@ export const submit = async (req, res) => {
 
   res.send(data)
 }
+
+export default register

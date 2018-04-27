@@ -1,6 +1,6 @@
-import { hash, random } from '@magic/cryptography'
+import { jwt, hash, random } from '@magic/cryptography'
 
-export const submit = async (req, res) => {
+export const login = async (req, res) => {
   const { name, password } = req.body
 
   let error = undefined
@@ -9,7 +9,7 @@ export const submit = async (req, res) => {
   try {
     user = await res
       .db('users')
-      .first(['password', 'email'])
+      .first(['password', 'email', 'id'])
       .where({ name })
 
     const compared = await hash.compare(password, user.password)
@@ -33,10 +33,17 @@ export const submit = async (req, res) => {
     data.error = error
   } else {
     const token = await random.bytes()
-    data.user = { name, ...user, token }
+    const { email, id } = user
+
+    const jwts = await jwt.sign({ token, id }, 'secret')
+    const jwtv = await jwt.verify({ token, id }, 'secret')
+    console.log({ jwts, jwtv })
+    data.user = { name, email, token }
   }
 
   console.log('response data', data)
 
   res.send(data)
 }
+
+export default login
