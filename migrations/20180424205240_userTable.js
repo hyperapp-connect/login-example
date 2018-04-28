@@ -4,7 +4,6 @@ exports.up = async db => {
   }
 
   return db.schema.createTable('users', table => {
-
     table.increments('id')
     table.string('name', 30).notNullable()
     table.string('password').notNullable()
