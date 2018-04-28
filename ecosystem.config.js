@@ -1,3 +1,5 @@
+const ignore_watch = ['db', 'node_modules']
+
 module.exports = {
   /**
    * Application configuration section
@@ -5,10 +7,10 @@ module.exports = {
    */
   apps: [
     {
-      name: 'FRONTEND',
+      name: 'frontend',
       script: 'dist/frontend.js',
       watch: true,
-      ignore_watch: ['db'],
+      ignore_watch,
       env: {
         NODE_ENV: 'development'
       },
@@ -17,10 +19,10 @@ module.exports = {
       },
     },
     {
-      name: 'GATEWAY',
+      name: 'gateway',
       script: 'dist/gateway.js',
       watch: true,
-      ignore_watch: ['db'],
+      ignore_watch,
       env: {
         NODE_ENV: 'development',
       },
