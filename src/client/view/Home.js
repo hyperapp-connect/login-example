@@ -1,6 +1,6 @@
 import { h } from 'hyperapp'
 
-export const view = () => (
+export const Home = () => (
   <div>
     <h1>Welcome.</h1>
 
@@ -8,4 +8,4 @@ export const view = () => (
   </div>
 )
 
-export default view
+export default Home
