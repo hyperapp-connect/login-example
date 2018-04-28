@@ -1,11 +1,12 @@
 {
   "name": "hyperconnect-login",
   "version": "0.0.1",
-  "description": "hyperapp action based forms",
+  "description": "hyperapp action based authentication example",
   "main": "src",
   "scripts": {
-    "start": "NODE_ENV=production npm run build && npm run server",
+    "start": "npm run server",
     "dev": "NODE_ENV=development npm run build -- -w",
+    "prod": "NODE_ENV=production npm run build -- -w",
     "build": "rollup -c",
     "format": "f -w",
     "server": "pm2 start ecosystem.config.js",
@@ -18,6 +19,9 @@
   "devDependencies": {
     "@magic/test": "github:magic/test",
     "babel-core": "6.26.3",
+    "babel-plugin-external-helpers": "6.22.0",
+    "babel-plugin-transform-es2015-arrow-functions": "6.22.0",
+    "babel-preset-env": "1.6.1",
     "nodemon": "1.17.3",
     "rollup": "0.58.2",
     "rollup-plugin-babel": "3.0.4",
@@ -31,6 +35,7 @@
     "@hyperconnect/form": "github:hyperapp-connect/form",
     "@hyperconnect/server": "github:hyperapp-connect/server",
     "@magic/cryptography": "github:magic/cryptography",
+    "@magic/log": "github:magic/log",
     "hyperapp": "1.2.5",
     "knex": "0.14.6",
     "passport": "0.4.0",
