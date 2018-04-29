@@ -1,18 +1,18 @@
 import { h } from 'hyperapp'
 import { Link } from '@hyperapp/router'
 
-export const view = () => (
+const MenuLink = ({ to, text }) => <li><Link to={to}>{text}</Link></li>
+
+export const Menu = ({ user, logout }) => (
   <ul>
     <li>
       <Link to="/">Home</Link>
     </li>
-    <li>
-      <Link to="/login">Login</Link>
-    </li>
-    <li>
-      <Link to="/register">Register</Link>
-    </li>
+    { !user.jwt && <MenuLink to="/login" text='Login' /> }
+    { !user.jwt && <MenuLink to="/register" text='Register' /> }
+    { user.jwt && <MenuLink to="/profile" text='Profile' /> }
+    { user.jwt && <li><a onclick={logout}>Logout</a></li> }
   </ul>
 )
 
-export default view
+export default Menu
