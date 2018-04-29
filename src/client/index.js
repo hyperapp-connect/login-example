@@ -11,6 +11,7 @@ const options = {
   host: 'localhost',
   protocol: 'ws',
   port: 3001,
+  state,
 }
 
 // wires the app and mounts it.
