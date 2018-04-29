@@ -6,7 +6,8 @@ import { validate, handleError } from '@hyperconnect/form'
 
 export const local = {
   location: location.actions,
-  auth: clientActions.auth,
+  viewIfUser: clientActions.viewIfUser,
+  viewIfNoUser: clientActions.viewIfNoUser,
 
   forms: {
     login: {

@@ -3,7 +3,7 @@ import { Redirect } from '@hyperapp/router'
 import { Form } from '@hyperconnect/form'
 
 export const Login = (state, actions) => router => (
-  <div oncreate={actions.checkLoggedIn}>
+  <div oncreate={actions.viewIfNoUser}>
     <h2>Login</h2>
     <Form
       state={state.forms.login}

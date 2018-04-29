@@ -2,7 +2,7 @@ import { h } from 'hyperapp'
 import { Form } from '@hyperconnect/form'
 
 export const Register = (state, actions) => () => (
-  <div>
+  <div oncreate={actions.viewIfNoUser}>
     <h1>Register</h1>
     <Form
       actions={actions.forms.register}
