@@ -1,8 +1,8 @@
-import * as user from './user'
+import * as auth from './user'
 
 export const actions = {
   v0: {
-    user,
+    ...auth,
   },
 }
 

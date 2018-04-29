@@ -4,8 +4,10 @@ export const register = async (req, res) => {
   let error = undefined
   let user = undefined
 
+  const { name, password, password2, email } = req.body
+  console.log({ body: req.body })
+
   try {
-    const { name, password, password2, email } = req.body
     const pwHash = await hash(password)
 
     if (password !== password2) {
@@ -14,7 +16,12 @@ export const register = async (req, res) => {
 
     await res.db.table('users').insert({ name, password: pwHash, email })
   } catch (e) {
-    error = e
+    console.log(e.code, e.code === 'SQLITE_CONSTRAINT')
+    if (e.code === 'SQLITE_CONSTRAINT') {
+      error = 'User or email already used'
+    } else {
+      error = e.toString()
+    }
   }
 
   const data = {
