@@ -366,15 +366,16 @@ const mapActions$1 = (actions = {}, remote = {}, parent = null) => {
 };
 
 const actions = {
-  checkLogin: (state, actions, reverse = false) => (...args) => {
-    if (!reverse) {
-      if (state.user.jwt) {
-        actions.location.go(state.auth.redirect.login);
-      }
-    } else if (!state.user.jwt) {
+  viewIfUser: () => (state, actions) => {
+    if (!state.user.jwt) {
       actions.location.go(state.auth.redirect.logout);
     }
-  }
+  },
+  viewIfNoUser: () => (state, actions) => {
+    if (state.user.jwt) {
+      actions.location.go(state.auth.redirect.login);
+    }
+  },
 };
 
 const state = {
@@ -526,7 +527,8 @@ const Form$1 = ({ action, actions, state, title, submitValue }) => (
 
 const local = {
   location: location$1.actions,
-  auth: actions.auth,
+  viewIfUser: actions.viewIfUser,
+  viewIfNoUser: actions.viewIfNoUser,
 
   forms: {
     login: {
@@ -543,7 +545,6 @@ const local = {
 const remote = {
   login: res => (state$$1, actions$$1) => {
     console.log('user login callback', { res, actions: actions$$1 });
-
 
     if (!res.ok) {
       return {
@@ -575,7 +576,7 @@ const remote = {
     console.log({ res });
     if (!res.ok) {
       return {
-        errors: res.errors
+        errors: res.errors,
       }
     }
 
@@ -584,7 +585,7 @@ const remote = {
     return {
       user: {},
     }
-  }
+  },
 };
 
 // create the actions
@@ -670,7 +671,7 @@ const Home = () => (
 );
 
 const Login = (state, actions) => router => (
-  h('div', {oncreate: actions.checkLoggedIn}, [
+  h('div', {oncreate: actions.viewIfNoUser}, [
     h('h2', null, ["Login"]),
     Form$1({
       state: state.forms.login,
@@ -682,7 +683,7 @@ const Login = (state, actions) => router => (
 );
 
 const Profile = (state, actions) => router => (
-  h('div', null, [
+  h('div', {oncreate: actions.viewIfUser}, [
     h('h2', null, ["Profile"]),
     h('div', null, ["Name: ", state.user.name]),
     h('div', null, ["Email: ", state.user.email])
@@ -690,7 +691,7 @@ const Profile = (state, actions) => router => (
 );
 
 const Register = (state, actions) => () => (
-  h('div', null, [
+  h('div', {oncreate: actions.viewIfNoUser}, [
     h('h1', null, ["Register"]),
     Form$1({
       actions: actions.forms.register,
@@ -703,17 +704,25 @@ const Register = (state, actions) => () => (
 
 const E404 = (state, actions) => () => h('div', null, ["404 - Not found"]);
 
-const MenuLink = ({ to, text }) => h('li', null, [Link({to: to}, [text])]);
+const MenuLink = ({ to, text }) => (
+  h('li', null, [
+    Link({to: to}, [text])
+  ])
+);
 
 const Menu = ({ user, logout }) => (
   h('ul', null, [
     h('li', null, [
       Link({to: "/"}, ["Home"])
     ]),
-     !user.jwt && MenuLink({to: "/login", text: "Login"}),
-     !user.jwt && MenuLink({to: "/register", text: "Register"}),
-     user.jwt && MenuLink({to: "/profile", text: "Profile"}),
-     user.jwt && h('li', null, [h('a', {onclick: logout}, ["Logout"])])
+    !user.jwt && MenuLink({to: "/login", text: "Login"}),
+    !user.jwt && MenuLink({to: "/register", text: "Register"}),
+    user.jwt && MenuLink({to: "/profile", text: "Profile"}),
+    user.jwt && (
+      h('li', null, [
+        h('a', {onclick: logout}, ["Logout"])
+      ])
+    )
   ])
 );
 
