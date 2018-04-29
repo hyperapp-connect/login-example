@@ -25,7 +25,6 @@ export const remote = {
   login: res => (state, actions) => {
     console.log('user login callback', { res, actions })
 
-
     if (!res.ok) {
       return {
         errors: res.errors,
@@ -56,7 +55,7 @@ export const remote = {
     console.log({ res })
     if (!res.ok) {
       return {
-        errors: res.errors
+        errors: res.errors,
       }
     }
 
@@ -65,7 +64,7 @@ export const remote = {
     return {
       user: {},
     }
-  }
+  },
 }
 
 // create the actions

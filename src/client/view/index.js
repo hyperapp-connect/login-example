@@ -9,13 +9,10 @@ import { E404 } from './E404'
 
 import Menu from '../components/Menu'
 
-const checkShouldRender = (p = {}) => console.log({p}) || p.in ? p.jwt : !p.jwt
+const checkShouldRender = (p = {}) => (console.log({ p }) || p.in ? p.jwt : !p.jwt)
 
-const ProtectedRoute = props => (
-  checkShouldRender(props)
-  ? <Route {...props} />
-  : <Redirect to="/login" />
-)
+const ProtectedRoute = props =>
+  checkShouldRender(props) ? <Route {...props} /> : <Redirect to="/login" />
 
 // just a usual hyperapp view
 export const view = (state, actions) => (
