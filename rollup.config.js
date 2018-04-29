@@ -25,6 +25,18 @@ module.exports = [
     // build the bundle using babel
     babel({
       exclude: 'node_modules/**',
+      plugins: ['transform-es2015-arrow-functions'],
+      presets: [
+        [
+          "env",
+          {
+            modules: false,
+            targets: {
+              browsers: [ ">1%", "not op_mini all"],
+            }
+          }
+        ]
+      ]
     }),
     resolve({
       // use "module" field for ES6 module if possible
@@ -80,6 +92,7 @@ module.exports = [
   },
   external: [
     '@magic/cryptography',
+    '@magic/log',
     'passport',
     'passport-local',
     'ws',
@@ -145,6 +158,7 @@ module.exports = [
   },
   external: [
     '@magic/cryptography',
+    '@magic/log',
     'passport',
     'passport-local',
     'ws',
